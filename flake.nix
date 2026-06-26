@@ -11,17 +11,19 @@
   # dosfstools ships three sbin programs (fsck.fat, mkfs.fat, fatlabel) plus
   # seven compat symlinks (dosfsck, fsck.msdos, fsck.vfat, mkdosfs, mkfs.msdos,
   # mkfs.vfat, dosfslabel). They share boot/common/fat/io/charconv with no
-  # callbacks into the programs, so we fold them with the cpp-rename recipe
-  # (lib.cppRenameMulticall). The real binary is bin/dosfstools(.exe); every program/compat
-  # name is an argv[0] alias. mkfs.fat compiles its sources under per-target
-  # names (mkfs_fat-*.o). nixpkgs ships dosfstools on linux/darwin/cygwin, and
-  # its Linux device probing is #ifdef-guarded, so it cross-compiles to mingw
-  # too — no cosmo needed.
+  # callbacks into the programs. linux + darwin self-fold through the unpin-llvm
+  # engine (one bitcode module, three `unpin__dosfstools__*_main` entries), like
+  # coreutils/unzip. The hand-rolled cpp-rename fold (./spec → cosmo.nix) is
+  # ELF-only and reserved for the Windows path. The real binary is
+  # bin/dosfstools(.exe); every program/compat name is an argv[0] alias.
+  # nixpkgs ships dosfstools on linux/darwin/cygwin; Windows goes through cosmo
+  # (the same POSIX-layer route e2fsprogs takes), so no mingw cross.
   outputs = { self, unpins-lib }:
     let
       lib = unpins-lib.lib;
-      # Shared fold spec; per-target bits (basePkg, isTargetDarwin, isWindows)
-      # are merged in by `build`/`windowsBuild`.
+      # Hand-rolled cpp-rename fold spec — WINDOWS (cosmo) only. mkfs.fat compiles
+      # its sources under per-target names (mkfs_fat-*.o). per-target bits
+      # (basePkg, isWindows) are merged in by `windowsBuild`/cosmo.nix.
       spec = {
         primary = "dosfstools";
         makeSubdir = "src";
@@ -73,12 +75,20 @@
       binName = "dosfstools";
       smoke = [ "--unpin-program=mkfs.fat" "--help" ];
       smokePattern = "[Uu]sage";
-      build = pkgs:
-        lib.cppRenameMulticall (spec // {
-          inherit pkgs;
-          basePkg = pkgs.pkgsStatic.dosfstools;
-          isTargetDarwin = pkgs.pkgsStatic.stdenv.hostPlatform.isDarwin;
-        });
+
+      # Build via the unpin-llvm engine + emit a bitcode multicall module. linux
+      # + darwin both self-fold through the engine; each of the three programs'
+      # `main` becomes an `unpin__dosfstools__<prog>_main` entry, and the compat
+      # names are argv[0] aliases.
+      engine = "unpin-llvm";
+      multicall = {
+        programs = [
+          { name = "fatlabel"; aliases = [ "dosfslabel" ]; }
+          { name = "fsck.fat"; aliases = [ "dosfsck" "fsck.msdos" "fsck.vfat" ]; }
+          { name = "mkfs.fat"; aliases = [ "mkdosfs" "mkfs.msdos" "mkfs.vfat" ]; }
+        ];
+      };
+      build = pkgs: pkgs.pkgsStatic.dosfstools;
       # Windows: dosfstools is a POSIX program (termios/langinfo/endian/off_t/
       # SIGALRM/sys-ioctl/…). nixpkgs ships it for Windows only via cygwin's
       # POSIX layer; a pure-mingw cross is an 8+-header shim slog that ends up
