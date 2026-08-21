@@ -87,6 +87,10 @@
           { name = "fsck.fat"; aliases = [ "dosfsck" "fsck.msdos" "fsck.vfat" ]; }
           { name = "mkfs.fat"; aliases = [ "mkdosfs" "mkfs.msdos" "mkfs.vfat" ]; }
         ];
+        # What the windows fold below dispatches, from the same `spec` that
+        # builds it — so CI checks the .exe against this instead of against
+        # itself, and a table that drifts stops being a green run.
+        windowsTable = lib.cppRenameTable spec;
       };
       build = pkgs:
         let drv = pkgs.pkgsStatic.dosfstools; in
