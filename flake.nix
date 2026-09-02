@@ -61,12 +61,24 @@
           { name = "mkfs.vfat"; target = "mkfs.fat"; }
           { name = "dosfslabel"; target = "fatlabel"; }
         ];
+        # Upstream's `make install` (skipped here) installs the three real pages
+        # AND the seven compat names as symlinks. Installing only the real three
+        # left every compat name announced with no page — `unpin man dosfstools
+        # mkdosfs` dead on Windows while Linux, which takes nixpkgs' own install,
+        # had all ten. The stubs are generated from `aliases` above, so a name
+        # added there cannot ship without one.
         extraInstall = ''
           mkdir -p "$out/share/man/man8"
           for m in fsck.fat mkfs.fat fatlabel; do
             if [ -f "manpages/$m.8" ]; then install -m644 "manpages/$m.8" "$out/share/man/man8/$m.8"; fi
           done
-        '';
+        '' + builtins.concatStringsSep "" (map
+          (a: ''
+            if [ -f "$out/share/man/man8/${a.target}.8" ]; then
+              printf '.so man8/${a.target}.8\n' > "$out/share/man/man8/${a.name}.8"
+            fi
+          '')
+          spec.aliases);
       };
     in
     lib.mkStandaloneFlake {
