@@ -16,9 +16,9 @@ All three platforms create and check FAT filesystems in image files. Linux also 
 Run a program with [unpin](https://github.com/unpins/unpin):
 
 ```bash
-unpin dosfstools mkfs.fat -F 32 disk.img
-unpin dosfstools fatlabel disk.img MYVOLUME
-unpin dosfstools fsck.fat -v disk.img
+unpin dosfstools --unpin-program=mkfs.fat -F 32 disk.img
+unpin dosfstools --unpin-program=fatlabel disk.img MYVOLUME
+unpin dosfstools --unpin-program=fsck.fat -v disk.img
 ```
 
 To install the programs onto your PATH:
@@ -29,17 +29,22 @@ unpin install dosfstools
 
 `unpin install dosfstools` creates `mkfs.fat`, `fsck.fat` and `fatlabel`, plus the traditional aliases `mkdosfs`, `mkfs.msdos`, `mkfs.vfat`, `dosfsck`, `fsck.msdos`, `fsck.vfat` and `dosfslabel`. `unpin info dosfstools` lists every command.
 
+## Man pages
+
+One page per program is embedded, compat names included — read any with
+`unpin man dosfstools <program>`, e.g. `unpin man dosfstools mkfs.fat`.
+
 ## Build locally
 
 ```bash
 nix build github:unpins/dosfstools
-./result/bin/dosfstools mkfs.fat -F 32 disk.img
+./result/bin/dosfstools --unpin-program=mkfs.fat -F 32 disk.img
 ```
 
 Or run directly:
 
 ```bash
-nix run github:unpins/dosfstools -- mkfs.fat --help
+nix run github:unpins/dosfstools -- --unpin-program=mkfs.fat --help
 ```
 
 The first invocation will offer to add the [unpins.cachix.org](https://unpins.cachix.org) substituter so most pulls come pre-built.
@@ -50,8 +55,6 @@ The [Releases](https://github.com/unpins/dosfstools/releases) page has standalon
 
 ## Build notes
 
-- **Platforms:** Linux, macOS, Windows. macOS/Windows have no FAT block-device layer, so the tools work on image files but not live block devices.
 - **Windows:** built via [Cosmopolitan](https://github.com/jart/cosmopolitan), not mingw — see [`cosmo.nix`](cosmo.nix). dosfstools is a POSIX program (termios/langinfo/endian/SIGALRM/sys-ioctl); a pure-mingw cross dead-ends fighting mingw's own `dirent.h`, and nixpkgs only ships it for Windows via cygwin's POSIX layer, which is what cosmo provides for a single binary. One source fix: `O_EXCL` is neutralized on the image fd (cosmo's NT `open()` EINVALs on `O_RDWR|O_EXCL` for a regular file; on Linux it is a no-op there). NB: wine tolerates that `O_EXCL`, so it only surfaced on a real Windows host.
 - **Multicall:** the three programs (`fsck.fat`/`mkfs.fat`/`fatlabel`, plus their seven compat aliases) are folded into one binary — on Linux/macOS by the unpin-llvm engine (per-program bitcode module), and on Windows by a source-level `main` → `<prog>_main` rename (`lib.cppRenameMulticall`). Either way the shared FAT/IO objects are kept as a single copy.
 - **Tests:** dosfstools' testsuite runs on native builds (0 failures under static-musl) and auto-skips on cross targets the build host can't execute.
-- **Man pages:** the section-8 pages are embedded; read with `unpin man dosfstools mkfs.fat`.
