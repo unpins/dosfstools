@@ -9,7 +9,7 @@
 
 Part of the [unpins](https://unpins.org) catalog; install it with [`unpin`](https://github.com/unpins/unpin): `unpin install dosfstools`.
 
-All three platforms create and check FAT filesystems in image files. Linux also operates on block devices (`/dev/sd*`); on macOS and Windows it is image-only. The Windows build is a [Cosmopolitan](https://github.com/jart/cosmopolitan) `.exe` (see Build notes).
+All three platforms create and check FAT filesystems in image files. Linux also operates on block devices (`/dev/sd*`); on macOS and Windows it is image-only.
 
 ## Usage
 
@@ -55,6 +55,5 @@ The [Releases](https://github.com/unpins/dosfstools/releases) page has standalon
 
 ## Build notes
 
-- **Windows:** built via [Cosmopolitan](https://github.com/jart/cosmopolitan), not mingw — see [`cosmo.nix`](cosmo.nix). dosfstools is a POSIX program (termios/langinfo/endian/SIGALRM/sys-ioctl); a pure-mingw cross dead-ends fighting mingw's own `dirent.h`, and nixpkgs only ships it for Windows via cygwin's POSIX layer, which is what cosmo provides for a single binary. One source fix: `O_EXCL` is neutralized on the image fd (cosmo's NT `open()` EINVALs on `O_RDWR|O_EXCL` for a regular file; on Linux it is a no-op there). NB: wine tolerates that `O_EXCL`, so it only surfaced on a real Windows host.
-- **Multicall:** the three programs (`fsck.fat`/`mkfs.fat`/`fatlabel`, plus their seven compat aliases) are folded into one binary — on Linux/macOS by the unpin-llvm engine (per-program bitcode module), and on Windows by a source-level `main` → `<prog>_main` rename (`lib.cppRenameMulticall`). Either way the shared FAT/IO objects are kept as a single copy.
+- **Windows:** built via [Cosmopolitan](https://github.com/jart/cosmopolitan), not mingw — dosfstools is a POSIX program (termios/langinfo/endian/SIGALRM/sys-ioctl), and mingw lacks that POSIX layer.
 - **Tests:** dosfstools' testsuite runs on native builds (0 failures under static-musl) and auto-skips on cross targets the build host can't execute.
