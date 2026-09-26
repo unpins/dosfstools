@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [4.2-1] - 2026-09-26
+
 Initial release — `dosfstools` 4.2 as a single self-contained binary, built
 natively for Linux, macOS, and Windows.
 
