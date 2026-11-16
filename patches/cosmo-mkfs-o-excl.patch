@@ -1,0 +1,22 @@
+Windows (cosmo): open mkfs.fat's target without O_EXCL.
+
+mkfs.fat opens its target with `O_EXCL | O_RDWR` to refuse a mounted or busy
+block device. On a regular file without O_CREAT, O_EXCL is a no-op on Linux,
+but cosmocc's NT open() rejects it with EINVAL ("unable to open ...: Invalid
+argument"). On Windows the target is always an image file, so O_EXCL becomes
+0 there (e2fsprogs' unix_io.c needs the same). wine tolerates O_EXCL, so only
+a real Windows host shows the failure.
+
+--- a/src/mkfs.fat.c
++++ b/src/mkfs.fat.c
+@@ -49,6 +49,10 @@
+ #include "version.h"
+ 
+ #include <fcntl.h>
++#ifdef __COSMOPOLITAN__
++#undef O_EXCL
++#define O_EXCL 0
++#endif
+ #include <signal.h>
+ #include <string.h>
+ #include <stdio.h>
