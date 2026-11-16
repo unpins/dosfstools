@@ -104,13 +104,9 @@
         # itself, and a table that drifts stops being a green run.
         windowsTable = lib.cppRenameTable spec;
       };
-      build = pkgs:
-        let drv = pkgs.pkgsStatic.dosfstools; in
-        drv.overrideAttrs (_: {
-          # Run dosfstools' testsuite on native runners (0 failures under
-          # static-musl); auto-skips on crosses the build host can't execute.
-          doCheck = drv.stdenv.buildPlatform.canExecute drv.stdenv.hostPlatform;
-        });
+      # The testsuite (nixpkgs' `doCheck = true` + xxd) runs where the build host
+      # can execute the result; stdenv skips it on the crosses.
+      build = pkgs: pkgs.pkgsStatic.dosfstools;
       # Windows: dosfstools is a POSIX program (termios/langinfo/endian/off_t/
       # SIGALRM/sys-ioctl/…). nixpkgs ships it for Windows only via cygwin's
       # POSIX layer; a pure-mingw cross is an 8+-header shim slog that ends up
