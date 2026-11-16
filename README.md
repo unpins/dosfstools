@@ -9,7 +9,7 @@
 
 Part of the [unpins](https://unpins.org) catalog; install it with [`unpin`](https://github.com/unpins/unpin): `unpin install dosfstools`.
 
-All three platforms create and check FAT filesystems in image files. Linux also operates on block devices (`/dev/sd*`); on macOS and Windows it is image-only.
+All three platforms create and check FAT filesystems in image files. Linux and macOS also operate on block devices (`/dev/sd*`, `/dev/diskN`); on Windows it is image-only.
 
 ## Usage
 

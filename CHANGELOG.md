@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- The README said macOS was image-only; it also works on block devices
+  (`/dev/diskN`).
+
 ## [4.2-1] - 2026-09-26
 
 Initial release — `dosfstools` 4.2 as a single self-contained binary, built
