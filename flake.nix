@@ -14,7 +14,7 @@
   # callbacks into the programs. linux + darwin self-fold through the unpin-llvm
   # engine (one bitcode module, three `unpin__dosfstools__*_main` entries), like
   # coreutils/unzip. The hand-rolled cpp-rename fold (./spec → cosmo.nix) is
-  # ELF-only and reserved for the Windows path. The real binary is
+  # only for Windows, since linux/darwin fold through the engine. The real binary is
   # bin/dosfstools(.exe); every program/compat name is an argv[0] alias.
   # nixpkgs ships dosfstools on linux/darwin/cygwin; Windows goes through cosmo
   # (the same POSIX-layer route e2fsprogs takes), so no mingw cross.
@@ -23,7 +23,7 @@
       lib = unpins-lib.lib;
       # Hand-rolled cpp-rename fold spec — WINDOWS (cosmo) only. mkfs.fat compiles
       # its sources under per-target names (mkfs_fat-*.o). per-target bits
-      # (basePkg, isWindows) are merged in by `windowsBuild`/cosmo.nix.
+      # (pkgs, basePkg, isCosmo) are merged in by `windowsBuild`/cosmo.nix.
       spec = {
         primary = "dosfstools";
         makeSubdir = "src";

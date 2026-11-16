@@ -1,6 +1,6 @@
 # dosfstools (mkfs.fat + fsck.fat + fatlabel) via cosmoStaticCross for
-# Windows-x86_64, folded into one APE with the cpp-rename recipe (lib.cppRenameMulticall,
-# isCosmo path).
+# Windows-x86_64, folded into one Windows PE (.exe) with the cpp-rename recipe
+# (lib.cppRenameMulticall, isCosmo path).
 #
 # dosfstools is a POSIX program (termios/langinfo/endian/off_t/SIGALRM/
 # sys-ioctl, plus Linux block-device probing). A pure-mingw cross dead-ends in
